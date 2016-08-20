@@ -21,11 +21,28 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     private Pixmap pixmap = null;
     private Texture texture;
     private Sprite sprite;
-	
+
+    public enum Mode {
+        normal,
+        prepare,
+        preview,
+        takePicture,
+        waitForPictureReady,
+    }
+
+    private Mode mode = Mode.normal;
+
+    private final DeviceCameraControl deviceCameraControl;
+    public SuperColourFunJoy(DeviceCameraControl cameraControl) {
+        this.deviceCameraControl = cameraControl;
+    }
+
 	@Override
 	public void create () {
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
         Gdx.input.setInputProcessor(this);
+
+
 
 		batch = new SpriteBatch();
 
@@ -35,8 +52,8 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
             pixmap = new Pixmap(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), Pixmap.Format.RGBA8888);
 
             //Fill it red
-            pixmap.setColor(Color.RED);
-            pixmap.fill();
+            //pixmap.setColor(Color.RED);
+            //pixmap.fill();
 
             //Draw two lines forming an X
             pixmap.setColor(Color.BLACK);
@@ -58,13 +75,29 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     @Override
     public void render() {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+
+        Gdx.gl.glClearColor(0, 0, 0, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
         sprite.setPosition(0, 0);
         sprite.draw(batch);
         batch.end();
+
+        if(mode == Mode.normal) {
+            mode = Mode.prepare;
+            if (deviceCameraControl != null) {
+                deviceCameraControl.prepareCameraAsync();
+            }
+        }
+        if (mode == Mode.prepare) {
+            if (deviceCameraControl != null) {
+                if (deviceCameraControl.isReady()) {
+                    deviceCameraControl.startPreviewAsync();
+                    mode = Mode.preview;
+                }
+            }
+        }
     }
 
     @Override
@@ -78,6 +111,9 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     @Override
     public void dispose() {
+        deviceCameraControl.stopPreviewAsync();
+        mode = Mode.normal;
+
         batch.dispose();
         texture.dispose();
         pixmap.dispose();
