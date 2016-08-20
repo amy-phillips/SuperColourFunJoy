@@ -16,7 +16,7 @@ android {
     }
     defaultConfig {
         applicationId "uk.co.islovely.supercolourfunjoy"
-        minSdkVersion 9
+        minSdkVersion 11
         targetSdkVersion 24
     }
 }

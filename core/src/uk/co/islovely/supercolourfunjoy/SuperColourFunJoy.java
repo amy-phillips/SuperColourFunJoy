@@ -137,14 +137,14 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     @Override public boolean touchDragged (int screenX, int screenY, int pointer) {
         if (!dragging) return false;
 
-        floodFill(screenX, screenY, fillColour);
+        deviceCameraControl.ThrowPaint(screenX, screenY, fillColour);
         return true;
     }
 
     @Override public boolean touchUp (int screenX, int screenY, int pointer, int button) {
         if (button != Input.Buttons.LEFT || pointer > 0) return false;
 
-        floodFill(screenX, screenY, fillColour);
+        deviceCameraControl.ThrowPaint(screenX, screenY, fillColour);
         dragging = false;
         return true;
     }
@@ -163,69 +163,6 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     @Override public boolean scrolled (int amount) {
         return false;
-    }
-
-    private void floodFill(int x, int y, Color newC) {
-
-        int prevC = pixmap.getPixel(x, y);
-        Gdx.app.log("MyTag", "prevC:"+prevC);
-        Gdx.app.log("MyTag", "Color(prevC):"+new Color(prevC));
-        Gdx.app.log("MyTag", "newC:"+newC);
-        if(Color.rgba8888(newC) == prevC)
-            return;
-
-        pixmap.setColor(newC);
-
-        //simple flood fill with loop https://en.wikipedia.org/wiki/Flood_fill#Alternative_implementations
-        Queue<Vector2> to_fill = new Queue<Vector2>();
-        to_fill.addLast(new Vector2(x,y));
-        while(to_fill.size > 0) {
-            Vector2 pop = to_fill.removeFirst();
-            int curx = (int)pop.x;
-            int cury = (int)pop.y;
-
-            int w = curx;
-            int e = curx;
-
-            //Move w to the west until the color of the node to the west of w no longer matches target-color.
-            while(w>1 && (pixmap.getPixel(w-1, cury) == prevC)) {
-                w = w-1;
-            }
-            //Move e to the east until the color of the node to the east of e no longer matches target-color.
-            while(e<pixmap.getWidth()-2 && pixmap.getPixel(e+1, cury) == prevC) {
-                e = e+1;
-            }
-
-            //For each node n between w and e:
-            for(curx=w; curx<=e; ++curx) {
-                //optimisation - did we already do this one?
-                if(pixmap.getPixel(curx, cury) != prevC)
-                    continue;
-
-                //Set the color of n to replacement-color.
-                pixmap.drawPixel(curx, cury);
-
-                //If the color of the node to the north of n is target-color, add that node to Q.
-                if(cury>0 && pixmap.getPixel(curx, cury-1)==prevC) {
-                    Vector2 to_add = new Vector2(curx, cury - 1);
-
-                    if (to_fill.indexOf(to_add, true) == -1)
-                        to_fill.addLast(to_add);
-
-                }
-
-                //If the color of the node to the south of n is target-color, add that node to Q.
-                if(cury<pixmap.getHeight()-1 && pixmap.getPixel(curx, cury+1)==prevC) {
-                    Vector2 to_add = new Vector2(curx, cury+1);
-
-                    if (to_fill.indexOf(to_add, true) == -1)
-                        to_fill.addLast(to_add);
-                }
-            }
-        }
-
-        texture = new Texture(pixmap);
-        sprite = new Sprite(texture);
     }
 
 }

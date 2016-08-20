@@ -14,6 +14,7 @@ package uk.co.islovely.supercolourfunjoy;
  */
 
         import com.badlogic.gdx.files.FileHandle;
+        import com.badlogic.gdx.graphics.Color;
         import com.badlogic.gdx.graphics.Pixmap;
 
 public interface DeviceCameraControl {
@@ -41,4 +42,7 @@ public interface DeviceCameraControl {
     boolean isReady();
 
     void prepareCameraAsync();
+
+    void ThrowPaint(int x, int y, Color fillColour);
+
 }

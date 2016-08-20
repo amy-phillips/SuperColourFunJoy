@@ -17,10 +17,13 @@ package uk.co.islovely.supercolourfunjoy;
         import java.io.IOException;
         import java.util.List;
         import com.badlogic.gdx.files.FileHandle;
+        import com.badlogic.gdx.graphics.Color;
         import com.badlogic.gdx.graphics.Pixmap;
 
         import android.graphics.Bitmap;
         import android.graphics.Bitmap.CompressFormat;
+        import android.graphics.PorterDuff;
+        import android.graphics.PorterDuffColorFilter;
         import android.hardware.Camera;
         import android.view.ViewGroup;
         import android.view.ViewParent;
@@ -211,5 +214,11 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
             return true;
         }
         return false;
+    }
+
+    public void ThrowPaint(int x, int y, Color fillColour) {
+        if (cameraSurface!=null) {
+            cameraSurface.ThrowPaint(x, y, fillColour);
+        }
     }
 }
