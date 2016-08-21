@@ -42,7 +42,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
     public CameraSurface( Context context ) {
         super( context );
 
-       // setWillNotDraw(false);
+        //setWillNotDraw(false);
 
         // We're implementing the Callback interface and want to get notified
         // about certain surface events.
@@ -97,8 +97,8 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
     }
 
     // TODO stop tearing by not updating camera frame when drawing
-    private byte[] cameraFrame;
-    private Camera.Size previewSize;
+    public byte[] cameraFrame;
+    public Camera.Size previewSize;
 
     public void surfaceChanged( SurfaceHolder holder, int format, int width, int height ) {
         // This method is called when the surface changes, e.g. when it's size is set.
@@ -111,12 +111,11 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         previewSize = previewSizes.get(0);
 
         parameters.setPreviewSize(previewSize.width, previewSize.height);
-        parameters.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
+        //parameters.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
         //parameters.setPreviewFormat(ImageFormat.RGB_565); TODO optimisation???
 
         camera.setParameters(parameters);
 
-        /*
         int dataBufferSize=(int)(previewSize.height*previewSize.width*
                 (ImageFormat.getBitsPerPixel(camera.getParameters().getPreviewFormat())/8.0));
         camera.addCallbackBuffer(new byte[dataBufferSize]);
@@ -125,7 +124,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         camera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback() {
             private long timestamp=0;
             public synchronized void onPreviewFrame(byte[] data, Camera camera) {
-                Log.v("CameraTest","Time Gap = "+(System.currentTimeMillis()-timestamp));
+                //Log.v("CameraTest","Time Gap = "+(System.currentTimeMillis()-timestamp));
 
                 // stash for drawing later
                 cameraFrame = data;
@@ -135,12 +134,13 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
                     camera.addCallbackBuffer(data);
                 }catch (Exception e) {
                     Log.e("CameraTest", "addCallbackBuffer error");
+                    e.printStackTrace();
                     return;
                 }
                 return;
             }
         });
-        */
+
 
         // We also assign the preview display to this surface...
         try {
@@ -152,7 +152,7 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
 
     }
 
-    /*
+/*
     private ByteArrayOutputStream baos;
     private YuvImage yuvimage;
     private byte[] jdata;
@@ -162,7 +162,8 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
     @Override //from SurfaceView
     public void onDraw(Canvas canvas) {
         // wait for data
-        if(cameraFrame == null) {
+        if(true) //cameraFrame == null)
+        {
             invalidate(); //to call ondraw again
             return;
         }
@@ -173,17 +174,20 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos); //width and height of the screen
         jdata = baos.toByteArray();
 
+        previewBmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+
         for(int i=0; i<filters.size(); ++i) {
             paint.setColorFilter(filters.get(i));
         }
 
 
-        previewBmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+
 
         canvas.drawBitmap(previewBmp , 0, 0, paint);
         invalidate(); //to call ondraw again
     }
     */
+
 
     public void surfaceDestroyed( SurfaceHolder holder ) {
         // Once the surface gets destroyed, we stop the preview mode and release
@@ -195,15 +199,6 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
 
     public Camera getCamera() {
         return camera;
-    }
-
-    public void ThrowPaint(int x, int y, Color fillColour) {
-        /*
-        int srcC = previewBmp.getPixel(x,y);
-
-        filters.add(0, new PorterDuffColorFilter(srcC, PorterDuff.Mode.ADD));
-        filters.setSize(1);
-        */
     }
 
 }

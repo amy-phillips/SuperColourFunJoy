@@ -43,6 +43,5 @@ public interface DeviceCameraControl {
 
     void prepareCameraAsync();
 
-    void ThrowPaint(int x, int y, Color fillColour);
-
+    int scoreHitOnCameraFeed(int screenX, int screenY);
 }

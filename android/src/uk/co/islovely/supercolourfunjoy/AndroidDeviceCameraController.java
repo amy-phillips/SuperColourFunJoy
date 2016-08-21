@@ -12,22 +12,27 @@ package uk.co.islovely.supercolourfunjoy;
  * governing permissions and limitations under the License.
  */
 
+        import java.io.ByteArrayOutputStream;
         import java.io.FileNotFoundException;
         import java.io.FileOutputStream;
         import java.io.IOException;
         import java.util.List;
-        import com.badlogic.gdx.files.FileHandle;
-        import com.badlogic.gdx.graphics.Color;
-        import com.badlogic.gdx.graphics.Pixmap;
 
         import android.graphics.Bitmap;
         import android.graphics.Bitmap.CompressFormat;
-        import android.graphics.PorterDuff;
-        import android.graphics.PorterDuffColorFilter;
+        import android.graphics.BitmapFactory;
+        import android.graphics.Color;
+        import android.graphics.ImageFormat;
+        import android.graphics.Rect;
+        import android.graphics.YuvImage;
         import android.hardware.Camera;
+        import android.util.Log;
         import android.view.ViewGroup;
         import android.view.ViewParent;
         import android.view.ViewGroup.LayoutParams;
+
+        import com.badlogic.gdx.files.FileHandle;
+        import com.badlogic.gdx.graphics.Pixmap;
 
 public class AndroidDeviceCameraController implements DeviceCameraControl, Camera.PictureCallback, Camera.AutoFocusCallback {
 
@@ -216,9 +221,39 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
         return false;
     }
 
-    public void ThrowPaint(int x, int y, Color fillColour) {
-        if (cameraSurface!=null) {
-            cameraSurface.ThrowPaint(x, y, fillColour);
+    @Override
+    public int scoreHitOnCameraFeed(int screenX, int screenY) {
+        if (cameraSurface==null || cameraSurface.cameraFrame == null)
+            return 0;
+
+        ByteArrayOutputStream baos;
+        YuvImage yuvimage;
+        byte[] jdata;
+        Bitmap previewBmp;
+
+        baos = new ByteArrayOutputStream();
+        yuvimage=new YuvImage(cameraSurface.cameraFrame, ImageFormat.NV21, cameraSurface.previewSize.width, cameraSurface.previewSize.height, null);
+
+        yuvimage.compressToJpeg(new Rect(0, 0, cameraSurface.previewSize.width, cameraSurface.previewSize.height), 80, baos); //width and height of the screen
+        jdata = baos.toByteArray();
+
+        previewBmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+        int pixcol = previewBmp.getPixel(screenX, screenY);
+
+        // is it vaguely grey?
+        int redValue = Color.red(pixcol);
+        int blueValue = Color.blue(pixcol);
+        int greenValue = Color.green(pixcol);
+        final int MAX_COLOUR_DIFF = 10;
+        Log.v("colour","redValue = "+redValue);
+        Log.v("colour","greenValue = "+greenValue);
+        Log.v("colour","blueValue = "+blueValue);
+        if( Math.abs(redValue-blueValue) < MAX_COLOUR_DIFF &&
+            Math.abs(redValue-greenValue) < MAX_COLOUR_DIFF &&
+            Math.abs(greenValue-blueValue) < MAX_COLOUR_DIFF ) {
+            return 3;
         }
+
+        return 0;
     }
 }

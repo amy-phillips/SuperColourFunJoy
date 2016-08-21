@@ -9,16 +9,21 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Queue;
+
+import java.io.ByteArrayOutputStream;
 
 public class SuperColourFunJoy extends ApplicationAdapter implements InputProcessor {
     private SpriteBatch batch;
     private Texture splatTexture;
+    private int score = 0;
 
     public enum Mode {
         normal,
@@ -30,7 +35,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     private Mode mode = Mode.normal;
 
-    private Splat splats[] = new Splat[20];
+    private Splat splats[] = new Splat[1000];
 
     private final DeviceCameraControl deviceCameraControl;
     public SuperColourFunJoy(DeviceCameraControl cameraControl) {
@@ -70,6 +75,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         Gdx.gl.glClearColor(0, 0, 0, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+
         batch.begin();
         for(int i=0; i<splats.length; ++i) {
             if(splats[i] == null)
@@ -84,6 +90,15 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         }
         batch.end();
 
+        BitmapFont arial = new BitmapFont();
+        Label.LabelStyle style = new Label.LabelStyle(arial, Color.BLUE);
+        Label score_label = new Label("Score: "+score, style);
+        score_label.setFontScale(3);
+        score_label.setPosition(0, 10);
+
+        batch.begin();
+        score_label.draw(batch, 1.0f);
+        batch.end();
 
 
     }
@@ -107,7 +122,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     }
 
     boolean dragging;
-    Color fillColours[] = {Color.FOREST, Color.SCARLET, Color.ROYAL, Color.GOLD, Color.PINK };
+    Color fillColours[] = {Color.FOREST, Color.TEAL, Color.SCARLET, Color.ROYAL, Color.GOLD, Color.PINK };
     int fillColourIndex = 0;
     @Override public boolean mouseMoved (int screenX, int screenY) {
         return false;
@@ -130,7 +145,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     }
 
     @Override public boolean touchUp (int screenX, int screenY, int pointer, int button) {
-        //if (button != Input.Buttons.LEFT || pointer > 0) return false;
+        if (button != Input.Buttons.LEFT || pointer > 0) return false;
 
         ThrowPaint(screenX, screenY);
         dragging = false;
@@ -158,6 +173,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         return fillColours[fillColourIndex];
     }
 
+    // todo cooldown period to stop two simultaneous paints
     private void ThrowPaint(int screenX, int screenY) {
 
         Color col = getFillColour();
@@ -171,7 +187,11 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
             break;
         }
 
-        deviceCameraControl.ThrowPaint(screenX, screenY, col);
+        // did we hit any grey?
+        score += deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
+
     }
+
+    
 
 }
