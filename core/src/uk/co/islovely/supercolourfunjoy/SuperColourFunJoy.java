@@ -217,7 +217,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     long lastPaintTime = 0;
     // todo cooldown period to stop two simultaneous paints
-    private void ThrowPaint(int screenX, int screenY) {
+    private void ThrowPaint(final int screenX, final int screenY) {
         long timeSinceLastPaint = System.currentTimeMillis() - lastPaintTime;
         if(timeSinceLastPaint < 100)
             return;
@@ -236,14 +236,30 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         }
 
         // did we hit any grey?
-        int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
-        if(scoreIncrement>0) {
-            splatSounds[splatSoundIndex].play();
-            splatSoundIndex = (splatSoundIndex+1) % splatSounds.length;
-        } else {
-            errorSound.play();
-        }
-        score += scoreIncrement;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // do something important here, asynchronously to the rendering thread
+                final int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
+
+                // post a Runnable to the rendering thread that processes the result
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        // process the result, e.g. add it to an Array<Result> field of the ApplicationListener.
+                        if(scoreIncrement>0) {
+                            splatSounds[splatSoundIndex].play();
+                            splatSoundIndex = (splatSoundIndex+1) % splatSounds.length;
+                        } else {
+                            errorSound.play();
+                        }
+                        score += scoreIncrement;
+                    }
+                });
+            }
+        }).start();
+
+
 
     }
 
