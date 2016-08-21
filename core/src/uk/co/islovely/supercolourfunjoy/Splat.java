@@ -36,5 +36,10 @@ public class Splat {
             return;
 
         timeToLive--;
+
+        // clear up old sprite
+        if(!isValid()) {
+            sprite=null;
+        }
     }
 }

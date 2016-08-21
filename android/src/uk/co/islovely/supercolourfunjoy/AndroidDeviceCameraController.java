@@ -245,15 +245,15 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
         int blueValue = Color.blue(pixcol);
         int greenValue = Color.green(pixcol);
         final int MAX_COLOUR_DIFF = 10;
-        Log.v("colour","redValue = "+redValue);
-        Log.v("colour","greenValue = "+greenValue);
-        Log.v("colour","blueValue = "+blueValue);
-        if( Math.abs(redValue-blueValue) < MAX_COLOUR_DIFF &&
-            Math.abs(redValue-greenValue) < MAX_COLOUR_DIFF &&
-            Math.abs(greenValue-blueValue) < MAX_COLOUR_DIFF ) {
-            return 3;
+        //Log.v("colour","redValue = "+redValue);
+        //Log.v("colour","greenValue = "+greenValue);
+       // Log.v("colour","blueValue = "+blueValue);
+        if( Math.abs(redValue-blueValue) > MAX_COLOUR_DIFF ||
+            Math.abs(redValue-greenValue) > MAX_COLOUR_DIFF ||
+            Math.abs(greenValue-blueValue) > MAX_COLOUR_DIFF ) {
+            return 0;
         }
 
-        return 0;
+        return 3;
     }
 }

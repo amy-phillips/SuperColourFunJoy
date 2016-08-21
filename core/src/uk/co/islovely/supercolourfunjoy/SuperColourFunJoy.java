@@ -5,6 +5,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -34,8 +35,10 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     }
 
     private Mode mode = Mode.normal;
-
     private Splat splats[] = new Splat[1000];
+    private Sound splatSounds[] = new Sound[3];
+    int splatSoundIndex = 0;
+    private Sound errorSound;
 
     private final DeviceCameraControl deviceCameraControl;
     public SuperColourFunJoy(DeviceCameraControl cameraControl) {
@@ -51,7 +54,14 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
 		batch = new SpriteBatch();
 
+        splatSounds[0] = Gdx.audio.newSound(Gdx.files.internal("splat_01.mp3"));
+        splatSounds[1] = Gdx.audio.newSound(Gdx.files.internal("splat_02.mp3"));
+        splatSounds[2] = Gdx.audio.newSound(Gdx.files.internal("splat_03.mp3"));
+
+        errorSound =  Gdx.audio.newSound(Gdx.files.internal("error.mp3"));
 	}
+
+    boolean firstTouch = true;
 
     @Override
     public void render() {
@@ -91,14 +101,38 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         batch.end();
 
         BitmapFont arial = new BitmapFont();
-        Label.LabelStyle style = new Label.LabelStyle(arial, Color.BLUE);
-        Label score_label = new Label("Score: "+score, style);
+
+        Label.LabelStyle score_drop_style = new Label.LabelStyle(arial, Color.PURPLE);
+        Label score_drop_label = new Label("Score: "+score, score_drop_style);
+        score_drop_label.setFontScale(3);
+        score_drop_label.setPosition(0, 10);
+
+        Label.LabelStyle score_style = new Label.LabelStyle(arial, Color.YELLOW);
+        Label score_label = new Label("Score: "+score, score_style);
         score_label.setFontScale(3);
-        score_label.setPosition(0, 10);
+        score_label.setPosition(0+6, 10+6);
 
         batch.begin();
+        score_drop_label.draw(batch, 1.0f);
         score_label.draw(batch, 1.0f);
         batch.end();
+
+        if(firstTouch) {
+            Label.LabelStyle splash_drop_style = new Label.LabelStyle(arial, Color.BLACK);
+            Label splash_drop_label = new Label("Cover grey stuff in paint!", splash_drop_style);
+            splash_drop_label.setFontScale(6);
+            splash_drop_label.setPosition(10, Gdx.graphics.getHeight()/2);
+
+            Label.LabelStyle splash_style = new Label.LabelStyle(arial, Color.LIGHT_GRAY);
+            Label splash_label = new Label("Cover grey stuff in paint!", splash_style);
+            splash_label.setFontScale(6);
+            splash_label.setPosition(10+6, Gdx.graphics.getHeight()/2+6);
+
+            batch.begin();
+            splash_drop_label.draw(batch, 1.0f);
+            splash_label.draw(batch, 1.0f);
+            batch.end();
+        }
 
 
     }
@@ -119,6 +153,10 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
         batch.dispose();
         splatTexture.dispose();
+        errorSound.dispose();
+        for(int i=0; i<splatSounds.length; ++i) {
+            splatSounds[i].dispose();
+        }
     }
 
     boolean dragging;
@@ -140,6 +178,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     @Override public boolean touchDragged (int screenX, int screenY, int pointer) {
         if (!dragging) return false;
 
+        firstTouch = false;
         ThrowPaint(screenX, screenY);
         return true;
     }
@@ -147,6 +186,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     @Override public boolean touchUp (int screenX, int screenY, int pointer, int button) {
         if (button != Input.Buttons.LEFT || pointer > 0) return false;
 
+        firstTouch = false;
         ThrowPaint(screenX, screenY);
         dragging = false;
         return true;
@@ -173,8 +213,16 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         return fillColours[fillColourIndex];
     }
 
+    // todo scoring on thread
+
+    long lastPaintTime = 0;
     // todo cooldown period to stop two simultaneous paints
     private void ThrowPaint(int screenX, int screenY) {
+        long timeSinceLastPaint = System.currentTimeMillis() - lastPaintTime;
+        if(timeSinceLastPaint < 100)
+            return;
+
+        lastPaintTime = System.currentTimeMillis();
 
         Color col = getFillColour();
 
@@ -188,10 +236,15 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         }
 
         // did we hit any grey?
-        score += deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
+        int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
+        if(scoreIncrement>0) {
+            splatSounds[splatSoundIndex].play();
+            splatSoundIndex = (splatSoundIndex+1) % splatSounds.length;
+        } else {
+            errorSound.play();
+        }
+        score += scoreIncrement;
 
     }
-
-    
 
 }
