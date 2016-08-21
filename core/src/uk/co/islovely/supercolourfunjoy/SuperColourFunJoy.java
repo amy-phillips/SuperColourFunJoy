@@ -8,6 +8,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -213,16 +214,17 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         return fillColours[fillColourIndex];
     }
 
-    // todo scoring on thread
-
     long lastPaintTime = 0;
-    // todo cooldown period to stop two simultaneous paints
-    private void ThrowPaint(final int screenX, final int screenY) {
+    private void ThrowPaint(int screenX, int screenY) {
         long timeSinceLastPaint = System.currentTimeMillis() - lastPaintTime;
         if(timeSinceLastPaint < 100)
             return;
 
         lastPaintTime = System.currentTimeMillis();
+
+        java.util.Vector<Integer> dimensions = deviceCameraControl.GetScreenDimensions();
+        // invert y
+        screenY = dimensions.get(1) - screenY;
 
         Color col = getFillColour();
 
@@ -230,17 +232,21 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
             if(splats[i] != null)
                 continue;
 
-            splats[i] = new Splat(screenX, Gdx.graphics.getHeight()-screenY, splatTexture, col);
+            splats[i] = new Splat(screenX, screenY, splatTexture, col);
 
             break;
         }
+
+        final float x = (float)screenX / (float)dimensions.get(0);
+        final float y = (float)screenY / (float)dimensions.get(1);
 
         // did we hit any grey?
         new Thread(new Runnable() {
             @Override
             public void run() {
                 // do something important here, asynchronously to the rendering thread
-                final int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(screenX, screenY);
+
+                final int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(x, y);
 
                 // post a Runnable to the rendering thread that processes the result
                 Gdx.app.postRunnable(new Runnable() {

@@ -96,7 +96,6 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         safeCameraOpen();
     }
 
-    // TODO stop tearing by not updating camera frame when drawing
     public byte[] cameraFrame;
     public Camera.Size previewSize;
 
@@ -111,8 +110,6 @@ public class CameraSurface extends SurfaceView implements SurfaceHolder.Callback
         previewSize = previewSizes.get(0);
 
         parameters.setPreviewSize(previewSize.width, previewSize.height);
-        //parameters.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
-        //parameters.setPreviewFormat(ImageFormat.RGB_565); TODO optimisation???
 
         camera.setParameters(parameters);
 

@@ -16,6 +16,9 @@ package uk.co.islovely.supercolourfunjoy;
         import com.badlogic.gdx.files.FileHandle;
         import com.badlogic.gdx.graphics.Color;
         import com.badlogic.gdx.graphics.Pixmap;
+        import com.badlogic.gdx.math.Vector3;
+
+        import java.util.Vector;
 
 public interface DeviceCameraControl {
 
@@ -43,5 +46,7 @@ public interface DeviceCameraControl {
 
     void prepareCameraAsync();
 
-    int scoreHitOnCameraFeed(int screenX, int screenY);
+    int scoreHitOnCameraFeed(float x, float y);
+
+    Vector<Integer> GetScreenDimensions();
 }

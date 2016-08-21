@@ -17,7 +17,9 @@ package uk.co.islovely.supercolourfunjoy;
         import java.io.FileOutputStream;
         import java.io.IOException;
         import java.util.List;
+        import java.util.Vector;
 
+        import android.content.Context;
         import android.graphics.Bitmap;
         import android.graphics.Bitmap.CompressFormat;
         import android.graphics.BitmapFactory;
@@ -26,13 +28,18 @@ package uk.co.islovely.supercolourfunjoy;
         import android.graphics.Rect;
         import android.graphics.YuvImage;
         import android.hardware.Camera;
+        import android.util.DisplayMetrics;
         import android.util.Log;
         import android.view.ViewGroup;
         import android.view.ViewParent;
         import android.view.ViewGroup.LayoutParams;
+        import android.view.WindowManager;
 
+        import com.badlogic.gdx.Gdx;
         import com.badlogic.gdx.files.FileHandle;
         import com.badlogic.gdx.graphics.Pixmap;
+        import com.badlogic.gdx.math.Vector2;
+        import com.badlogic.gdx.math.Vector3;
 
 public class AndroidDeviceCameraController implements DeviceCameraControl, Camera.PictureCallback, Camera.AutoFocusCallback {
 
@@ -222,7 +229,21 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
     }
 
     @Override
-    public int scoreHitOnCameraFeed(int screenX, int screenY) {
+    public Vector<Integer> GetScreenDimensions() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) activity.getApplicationContext().getSystemService(Context.WINDOW_SERVICE); // the results will be higher than using the activity context object or the getWindowManager() shortcut
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;
+        int screenHeight = displayMetrics.heightPixels;
+
+        Vector<Integer> ret = new Vector<Integer>();
+        ret.add(0, screenWidth);
+        ret.add(1, screenHeight);
+        return ret;
+    }
+
+    @Override
+    public int scoreHitOnCameraFeed(float x, float y) {
         if (cameraSurface==null || cameraSurface.cameraFrame == null)
             return 0;
 
@@ -238,7 +259,15 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
         jdata = baos.toByteArray();
 
         previewBmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
-        int pixcol = previewBmp.getPixel(screenX, screenY);
+
+
+
+        //map from screen space to pixels
+        int pixx = (int)(x * previewBmp.getWidth());
+        int pixy = (int)(y * previewBmp.getHeight());
+        Log.v("scrspace", "x scr:"+x+"->"+pixx);
+        Log.v("scrspace", "y scr:"+y+"->"+pixy);
+        int pixcol = previewBmp.getPixel(pixx, pixy);
 
         // is it vaguely grey?
         int redValue = Color.red(pixcol);
