@@ -18,9 +18,7 @@ import com.badlogic.gdx.utils.Queue;
 
 public class SuperColourFunJoy extends ApplicationAdapter implements InputProcessor {
     private SpriteBatch batch;
-    private Pixmap pixmap = null;
-    private Texture texture;
-    private Sprite sprite;
+    private Texture splatTexture;
 
     public enum Mode {
         normal,
@@ -32,6 +30,8 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     private Mode mode = Mode.normal;
 
+    private Splat splats[] = new Splat[20];
+
     private final DeviceCameraControl deviceCameraControl;
     public SuperColourFunJoy(DeviceCameraControl cameraControl) {
         this.deviceCameraControl = cameraControl;
@@ -42,47 +42,14 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
         Gdx.input.setInputProcessor(this);
 
-
+        splatTexture = new Texture(Gdx.files.internal("splat_white.png"));
 
 		batch = new SpriteBatch();
 
-        if(pixmap == null) {
-            // A Pixmap is basically a raw image in memory as repesented by pixels
-            // We create one 256 wide, 128 height using 8 bytes for Red, Green, Blue and Alpha channels
-            pixmap = new Pixmap(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), Pixmap.Format.RGBA8888);
-
-            //Fill it red
-            //pixmap.setColor(Color.RED);
-            //pixmap.fill();
-
-            //Draw two lines forming an X
-            pixmap.setColor(Color.BLACK);
-            pixmap.drawLine(0, 0, pixmap.getWidth()-1, pixmap.getHeight()-1);
-            pixmap.drawLine(0, pixmap.getHeight()-1, pixmap.getWidth()-1, 0);
-
-            //Draw a circle about the middle
-            pixmap.setColor(Color.YELLOW);
-            pixmap.drawCircle(pixmap.getWidth()/2, pixmap.getHeight()/2, pixmap.getHeight()/2 - 1);
-        }
-
-		texture = new Texture(pixmap);
-
-		//It's the textures responsibility now... get rid of the pixmap
-		//pixmap.dispose();
-
-		sprite = new Sprite(texture);
 	}
 
     @Override
     public void render() {
-
-        Gdx.gl.glClearColor(0, 0, 0, 0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
-        sprite.setPosition(0, 0);
-        sprite.draw(batch);
-        batch.end();
 
         if(mode == Mode.normal) {
             mode = Mode.prepare;
@@ -98,6 +65,27 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
                 }
             }
         }
+
+
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        batch.begin();
+        for(int i=0; i<splats.length; ++i) {
+            if(splats[i] == null)
+                continue;
+
+            splats[i].sprite.draw(batch);
+
+            // update in render - urgh!
+            splats[i].update();
+            if(!splats[i].isValid())
+                splats[i] = null;
+        }
+        batch.end();
+
+
+
     }
 
     @Override
@@ -115,12 +103,12 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         mode = Mode.normal;
 
         batch.dispose();
-        texture.dispose();
-        pixmap.dispose();
+        splatTexture.dispose();
     }
 
     boolean dragging;
-    Color fillColour = Color.FOREST;
+    Color fillColours[] = {Color.FOREST, Color.SCARLET, Color.ROYAL, Color.GOLD, Color.PINK };
+    int fillColourIndex = 0;
     @Override public boolean mouseMoved (int screenX, int screenY) {
         return false;
     }
@@ -137,14 +125,14 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     @Override public boolean touchDragged (int screenX, int screenY, int pointer) {
         if (!dragging) return false;
 
-        deviceCameraControl.ThrowPaint(screenX, screenY, fillColour);
+        ThrowPaint(screenX, screenY);
         return true;
     }
 
     @Override public boolean touchUp (int screenX, int screenY, int pointer, int button) {
-        if (button != Input.Buttons.LEFT || pointer > 0) return false;
+        //if (button != Input.Buttons.LEFT || pointer > 0) return false;
 
-        deviceCameraControl.ThrowPaint(screenX, screenY, fillColour);
+        ThrowPaint(screenX, screenY);
         dragging = false;
         return true;
     }
@@ -163,6 +151,27 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
 
     @Override public boolean scrolled (int amount) {
         return false;
+    }
+
+    private Color getFillColour() {
+        fillColourIndex = (fillColourIndex + 1) % fillColours.length;
+        return fillColours[fillColourIndex];
+    }
+
+    private void ThrowPaint(int screenX, int screenY) {
+
+        Color col = getFillColour();
+
+        for(int i=0; i<splats.length; ++i) {
+            if(splats[i] != null)
+                continue;
+
+            splats[i] = new Splat(screenX, Gdx.graphics.getHeight()-screenY, splatTexture, col);
+
+            break;
+        }
+
+        deviceCameraControl.ThrowPaint(screenX, screenY, col);
     }
 
 }
