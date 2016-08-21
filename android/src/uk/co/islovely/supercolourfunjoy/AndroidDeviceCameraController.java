@@ -242,6 +242,8 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
         return ret;
     }
 
+    int lastPixcol = 0;
+
     @Override
     public int scoreHitOnCameraFeed(float x, float y) {
         if (cameraSurface==null || cameraSurface.cameraFrame == null)
@@ -260,23 +262,31 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
 
         previewBmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
-
-
         //map from screen space to pixels
-        int pixx = (int)(x * previewBmp.getWidth());
+        int pixx = (int)((1.0f-x) * previewBmp.getWidth());
         int pixy = (int)(y * previewBmp.getHeight());
         Log.v("scrspace", "x scr:"+x+"->"+pixx);
         Log.v("scrspace", "y scr:"+y+"->"+pixy);
-        int pixcol = previewBmp.getPixel(pixx, pixy);
+        lastPixcol = previewBmp.getPixel(pixx, pixy);
 
         // is it vaguely grey?
-        int redValue = Color.red(pixcol);
-        int blueValue = Color.blue(pixcol);
-        int greenValue = Color.green(pixcol);
-        final int MAX_COLOUR_DIFF = 10;
-        //Log.v("colour","redValue = "+redValue);
-        //Log.v("colour","greenValue = "+greenValue);
-       // Log.v("colour","blueValue = "+blueValue);
+        int redValue = Color.red(lastPixcol);
+        int blueValue = Color.blue(lastPixcol);
+        int greenValue = Color.green(lastPixcol);
+        int alphaValue = Color.alpha(lastPixcol);
+
+        int MAX_COLOUR_DIFF = 30;
+        if(redValue > 200 && blueValue > 200 && greenValue > 200) {
+            MAX_COLOUR_DIFF = 50;
+        } else if(redValue > 100 && blueValue > 100 && greenValue > 100) {
+            MAX_COLOUR_DIFF = 20;
+        } else {
+            MAX_COLOUR_DIFF = 10;
+        }
+        Log.v("colour","redValue = "+redValue);
+        Log.v("colour","greenValue = "+greenValue);
+        Log.v("colour","blueValue = "+blueValue);
+        Log.v("colour","alphaValue = "+alphaValue);
         if( Math.abs(redValue-blueValue) > MAX_COLOUR_DIFF ||
             Math.abs(redValue-greenValue) > MAX_COLOUR_DIFF ||
             Math.abs(greenValue-blueValue) > MAX_COLOUR_DIFF ) {
@@ -284,5 +294,10 @@ public class AndroidDeviceCameraController implements DeviceCameraControl, Camer
         }
 
         return 3;
+    }
+
+    @Override
+    public int GetLastHitColour() {
+        return lastPixcol;
     }
 }

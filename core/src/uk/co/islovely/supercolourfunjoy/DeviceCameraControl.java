@@ -49,4 +49,6 @@ public interface DeviceCameraControl {
     int scoreHitOnCameraFeed(float x, float y);
 
     Vector<Integer> GetScreenDimensions();
+
+    int GetLastHitColour();
 }

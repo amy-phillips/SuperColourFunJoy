@@ -8,19 +8,11 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.utils.Queue;
 
-import java.io.ByteArrayOutputStream;
 
 public class SuperColourFunJoy extends ApplicationAdapter implements InputProcessor {
     private SpriteBatch batch;
@@ -87,6 +79,10 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 
+        Color lastHitColour = new Color();
+        Color.argb8888ToColor(lastHitColour, deviceCameraControl.GetLastHitColour());
+        Splat debugSplat = new Splat(10, 10, splatTexture, lastHitColour);
+
         batch.begin();
         for(int i=0; i<splats.length; ++i) {
             if(splats[i] == null)
@@ -99,7 +95,14 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
             if(!splats[i].isValid())
                 splats[i] = null;
         }
+
+        debugSplat.sprite.draw(batch);
+
         batch.end();
+
+
+
+
 
         BitmapFont arial = new BitmapFont();
 
@@ -185,7 +188,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
     }
 
     @Override public boolean touchUp (int screenX, int screenY, int pointer, int button) {
-        if (button != Input.Buttons.LEFT || pointer > 0) return false;
+        //if (button != Input.Buttons.LEFT || pointer > 0) return false;
 
         firstTouch = false;
         ThrowPaint(screenX, screenY);
@@ -246,7 +249,7 @@ public class SuperColourFunJoy extends ApplicationAdapter implements InputProces
             public void run() {
                 // do something important here, asynchronously to the rendering thread
 
-                final int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(x, y);
+                final int scoreIncrement = deviceCameraControl.scoreHitOnCameraFeed(x, 1.0f-y);
 
                 // post a Runnable to the rendering thread that processes the result
                 Gdx.app.postRunnable(new Runnable() {
